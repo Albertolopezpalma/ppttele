@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telefónica Skills Odyssey v2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+
+        :root {
+            --primary-color: #00A9E0; /* Azul Telefónica como neón */
+            --secondary-color: #FFD700; /* Amarillo/Dorado para destacar */
+            --bg-color: #0c0a1f; /* Azul oscuro/morado profundo del espacio */
+            --text-color: #E0E0E0;
+            --card-bg: rgba(20, 20, 50, 0.7);
+            --border-color: rgba(0, 169, 224, 0.5);
+            --success-color: #00ff88;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(0, 169, 224, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            position: relative;
+            transition: all 0.5s ease-in-out;
+        }
+
+        h1, h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary-color);
+            text-align: center;
+            text-shadow: 0 0 10px var(--primary-color);
+            letter-spacing: 2px;
+        }
+        
+        h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-color);
+            text-shadow: 0 0 8px var(--secondary-color);
+        }
+
+        p {
+            line-height: 1.6;
+            text-align: center;
+            max-width: 600px;
+            margin: 15px auto;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn {
+            display: block;
+            width: 250px;
+            padding: 15px 20px;
+            margin: 30px auto;
+            background: transparent;
+            color: var(--secondary-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--secondary-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        /* --- NUEVOS ESTILOS PARA LA EXPERIENCIA --- */
+
+        /* Barra de Progreso */
+        .progress-container {
+            width: 100%;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            border-radius: 10px;
+            text-align: center;
+            line-height: 20px;
+            color: var(--bg-color);
+            font-weight: bold;
+            transition: width 0.5s ease-out;
+            font-family: 'Orbitron';
+        }
+
+        /* Contenedor de Preguntas */
+        .question-wrapper {
+            display: none;
+        }
+        .question-wrapper.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        .assessment-question {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 5px;
+        }
+        .assessment-question p { text-align: left; margin-top: 0; font-size: 1.1em; }
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .options label {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .options label:hover { transform: translateX(5px); border-color: var(--secondary-color); }
+        .options input[type="radio"] { display: none; }
+        .options input[type="radio"]:checked + label {
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        /* Pantalla de Análisis */
+        #analyzing-screen { text-align: center; }
+        .loader {
+            border: 8px solid #f3f3f330;
+            border-top: 8px solid var(--secondary-color);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1.5s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Resultados y Recomendaciones */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        
+        #results-text p {
+            text-align: left;
+        }
+
+        /* Tarjetas de Cursos Recomendados */
+        #recommendations-container { margin-top: 20px; }
+        .mission-card {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-left: 5px solid var(--secondary-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .mission-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+        .mission-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .mission-header i {
+            font-size: 1.5em;
+            color: var(--secondary-color);
+        }
+        .mission-header h4 {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .mission-card p {
+            font-size: 0.9em;
+            text-align: left;
+            margin: 10px 0;
+        }
+        .enroll-btn {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: var(--bg-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.8em;
+            transition: transform 0.2s;
+        }
+        .enroll-btn:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .results-grid { grid-template-columns: 1fr; }
+            .btn { width: 90%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Pantalla de Bienvenida -->
+        <section id="welcome-screen" class="screen active">
+            <h1>Telefónica Skills Odyssey</h1>
+            <p>¡Bienvenido, explorador! Tu carrera es una galaxia de oportunidades. Antes de iniciar tu viaje, necesitamos calibrar los sistemas de navegación de tu nave. ¿Estás listo para descubrir tu constelación de habilidades?</p>
+            <button class="btn" onclick="startAssessment()">INICIAR CALIBRACIÓN</button>
+        </section>
+
+        <!-- Pantalla de Assessment -->
+        <section id="assessment-screen" class="screen">
+            <h2><i class="fas fa-rocket"></i> Calibración de Sistemas</h2>
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar">0%</div>
+            </div>
+            <div id="questions-container">
+                <!-- Las preguntas se inyectarán aquí por JS -->
+            </div>
+            <button id="next-btn" class="btn" onclick="nextQuestion()" disabled>Siguiente</button>
+        </section>
+        
+        <!-- Pantalla de Análisis (Intermedia) -->
+        <section id="analyzing-screen" class="screen">
+            <h2>Analizando Telemetría...</h2>
+            <div class="loader"></div>
+            <p>Calculando tu mapa estelar personal. Estamos trazando las coordenadas de tu potencial...</p>
+        </section>
+
+        <!-- Pantalla de Resultados -->
+        <section id="results-screen" class="screen">
+            <h2><i class="fas fa-star"></i> Tu Constelación de Habilidades</h2>
+            <div class="results-grid">
+                <div id="chart-container">
+                    <canvas id="skill-constellation-chart"></canvas>
+                </div>
+                <div id="results-text">
+                    <h3>Análisis de Navegación:</h3>
+                    <p id="results-summary">Este es tu mapa estelar. Las estrellas más alejadas representan tus habilidades más potentes. Las más cercanas son oportunidades para expandir tu universo.</p>
+                    <div id="recommendations-container">
+                        <h3><i class="fas fa-map-signs"></i> Misiones Recomendadas:</h3>
+                        <!-- Las tarjetas de misión se inyectarán aquí -->
+                    </div>
+                </div>
+            </div>
+             <button class="btn" onclick="restart()">RECALIBRAR SISTEMAS</button>
+        </section>
+    </div>
+
+    <script>
+        const screens = document.querySelectorAll('.screen');
+        const progressBar = document.getElementById('progress-bar');
+        const questionsContainer = document.getElementById('questions-container');
+        const nextBtn = document.getElementById('next-btn');
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let skillChart;
+
+        const questions = [
+            {
+                text: "Cuando te enfrentas a una tabla de datos de ventas, ¿cómo te sientes?",
+                skill: "digital",
+                options: [
+                    { text: "Perdido en un agujero negro", value: 1 },
+                    { text: "Puedo navegar, pero con mapa", value: 3 },
+                    { text: "Soy el capitán de esta nave de datos", value: 5 }
+                ]
+            },
+            {
+                text: "Un cliente potencial muestra dudas sobre nuestra oferta. ¿Tu reacción?",
+                skill: "comercial",
+                options: [
+                    { text: "Activar escudos y esperar", value: 1 },
+                    { text: "Abrir un canal de comunicación estándar", value: 3 },
+                    { text: "Establecer una alianza diplomática", value: 5 }
+                ]
+            },
+            {
+                text: "¿Con qué frecuencia utilizas herramientas de IA (ChatGPT, Copilot) para optimizar tu trabajo?",
+                skill: "ia",
+                options: [
+                    { text: "¿Tecnología alienígena? No la uso.", value: 1 },
+                    { text: "A veces, para tareas sencillas", value: 3 },
+                    { text: "Es mi copiloto en cada misión", value: 5 }
+                ]
+            },
+            {
+                text: "Al liderar un equipo en un proyecto nuevo, tu enfoque es...",
+                skill: "liderazgo",
+                options: [
+                    { text: "Dar órdenes y esperar que sigan", value: 1 },
+                    { text: "Distribuir tareas y supervisar", value: 3 },
+                    { text: "Inspirar a la tripulación y co-crear el rumbo", value: 5 }
+                ]
+            }
+        ];
+        
+        function showScreen(screenId) {
+            screens.forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startAssessment() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            buildQuestionsHTML();
+            showQuestion(0);
+            updateProgressBar();
+            showScreen('assessment-screen');
+        }
+        
+        function buildQuestionsHTML() {
+            questionsContainer.innerHTML = '';
+            questions.forEach((q, index) => {
+                const qWrapper = document.createElement('div');
+                qWrapper.className = 'question-wrapper';
+                qWrapper.id = `q-wrapper-${index}`;
+                
+                let optionsHTML = q.options.map((opt, i) => `
+                    <div>
+                        <input type="radio" id="q${index}o${i}" name="q${index}" value="${opt.value}">
+                        <label for="q${index}o${i}">${opt.text}</label>
+                    </div>
+                `).join('');
+
+                qWrapper.innerHTML = `
+                    <div class="assessment-question" data-skill="${q.skill}">
+                        <p>${index + 1}. ${q.text}</p>
+                        <div class="options">${optionsHTML}</div>
+                    </div>
+                `;
+                questionsContainer.appendChild(qWrapper);
+            });
+
+            // Add event listeners after creation
+            questionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', () => nextBtn.disabled = false);
+            });
+        }
+        
+        function showQuestion(index) {
+            document.querySelectorAll('.question-wrapper').forEach(qw => qw.classList.remove('active'));
+            document.getElementById(`q-wrapper-${index}`).classList.add('active');
+            nextBtn.disabled = true; // Disable until an option is selected
+            if(index === questions.length - 1) {
+                nextBtn.textContent = 'VER RESULTADOS';
+            } else {
+                nextBtn.textContent = 'Siguiente';
+            }
+        }
+
+        function nextQuestion() {
+            const selectedOption = document.querySelector(`input[name="q${currentQuestionIndex}"]:checked`);
+            if (!selectedOption) return;
+
+            userAnswers[currentQuestionIndex] = {
+                skill: questions[currentQuestionIndex].skill,
+                value: parseInt(selectedOption.value)
+            };
+
+            currentQuestionIndex++;
+            updateProgressBar();
+
+            if (currentQuestionIndex < questions.length) {
+                showQuestion(currentQuestionIndex);
+            } else {
+                finishAssessment();
+            }
+        }
+        
+        function updateProgressBar() {
+            const progress = (currentQuestionIndex / questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${Math.round(progress)}%`;
+        }
+
+        function finishAssessment() {
+            showScreen('analyzing-screen');
+            setTimeout(() => {
+                const scores = calculateScores();
+                displayResults(scores);
+                showScreen('results-screen');
+            }, 2500); // Simulate analysis time
+        }
+        
+        function calculateScores() {
+            const finalScores = { digital: 0, comercial: 0, ia: 0, liderazgo: 0 };
+            userAnswers.forEach(answer => {
+                finalScores[answer.skill] = answer.value;
+            });
+            return finalScores;
+        }
+
+        function displayResults(scores) {
+            const ctx = document.getElementById('skill-constellation-chart').getContext('2d');
+            if (skillChart) skillChart.destroy();
+
+            skillChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Habilidad Digital', 'Técnica Comercial', 'Dominio de IA', 'Liderazgo de Flota'],
+                    datasets: [{
+                        label: 'Nivel de Potencia',
+                        data: [scores.digital, scores.comercial, scores.ia, scores.liderazgo],
+                        backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                        borderColor: 'rgba(255, 215, 0, 1)',
+                        pointBackgroundColor: 'rgba(255, 215, 0, 1)',
+                    }]
+                },
+                options: {
+                    scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.2)' }, grid: { color: 'rgba(255, 255, 255, 0.2)' }, pointLabels: { font: { size: 12, family: 'Poppins' }, color: 'white' }, ticks: { display: false, stepSize: 1 }, min: 0, max: 5 }},
+                    plugins: { legend: { display: false } }
+                }
+            });
+            generateRecommendations(scores);
+        }
+
+        function generateRecommendations(scores) {
+            const recommendationsContainer = document.getElementById('recommendations-container');
+            recommendationsContainer.innerHTML = '<h3><i class="fas fa-map-signs"></i> Misiones Recomendadas:</h3>'; // Reset
+            
+            const allMissions = [
+                { skill: 'digital', threshold: 4, icon: 'fa-database', title: 'Curso: Power BI - De Cero a Héroe de Datos', description: 'Transforma datos brutos en decisiones estratégicas. Aprende a crear dashboards interactivos y visualizaciones impactantes.' },
+                { skill: 'comercial', threshold: 4, icon: 'fa-handshake', title: 'Curso: Negociación Avanzada y Cierre de Ventas', description: 'Domina el arte de la persuasión y las técnicas de cierre más efectivas para superar objeciones y maximizar resultados.' },
+                { skill: 'ia', threshold: 4, icon: 'fa-robot', title: 'Curso: IA Generativa para la Productividad Diaria', description: 'Integra herramientas como Copilot y ChatGPT en tu flujo de trabajo para automatizar tareas, generar ideas y ser más eficiente.' },
+                { skill: 'liderazgo', threshold: 4, icon: 'fa-users', title: 'Curso: Liderazgo Inspirador y Gestión de Equipos Ágiles', description: 'Desarrolla las competencias para motivar, guiar y empoderar a tu equipo en un entorno de cambio constante.' }
+            ];
+
+            let recommendedCount = 0;
+            allMissions.forEach(mission => {
+                if (scores[mission.skill] < mission.threshold) {
+                    recommendedCount++;
+                    const card = document.createElement('div');
+                    card.className = 'mission-card';
+                    card.innerHTML = `
+                        <div class="mission-header">
+                            <i class="fas ${mission.icon}"></i>
+                            <h4>${mission.title}</h4>
+                        </div>
+                        <p>${mission.description}</p>
+                        <a href="#" class="enroll-btn">Inscribirse ahora <i class="fas fa-arrow-right"></i></a>
+                    `;
+                    recommendationsContainer.appendChild(card);
+                }
+            });
+
+            const summaryP = document.getElementById('results-summary');
+            if (recommendedCount === 0) {
+                 summaryP.textContent = '¡Análisis completado! Tus sistemas están perfectamente calibrados y listos para cualquier desafío. Eres un explorador de élite. ¡Consulta el catálogo completo para misiones avanzadas!';
+                 recommendationsContainer.innerHTML = ''; // No mostrar cabecera de misiones
+            } else {
+                 summaryP.textContent = 'Análisis completado. Hemos detectado áreas clave donde una misión de entrenamiento puede potenciar significativamente tus capacidades de navegación. ¡Acepta el desafío!';
+            }
+        }
+        
+        function restart() {
+            showScreen('welcome-screen');
+        }
+
+    </script>
+
+</body>
+</html>
